@@ -1,0 +1,4 @@
+kafka:
+  broker: localhost:9092
+  topic: store.order
+  view-topic: view.order
