@@ -23,16 +23,7 @@
 
 query를 구현하는 방법이 너무 많지만,이번에는 Kafka streams의 Processor API, 그중 Transformer를 사용해봤습니다. Transformer는 직접  Statestore를 데이터 put, get이 자유로워서, 제가 원하는 방식으로 Aggregation 하여 Materialized View 를 위한 topic `view.order`로 밀어 넣었습니다, 별도의 statestore를 조회하는 방식이 아니라, `view.order` 를 consume하여 KV store (여기서는 mongodb)로 따로 보관 하였습니다. local statestore 를 조회하는 방법도 물론 가능하지만 관리나, 배포, HA 구성과 같은 운영적인 부분에서는 차라리 별도의 read 전용 DB를 가져가는게 맞다고 생각하고 있습니다.
 
-Transformer를 사용하는 또 하나의 장점은 만약 여러 Topic을 Aggregate 해야하는 일이 생기더라도 원하는 방식으로 조작하여 원하는 topic( 공통의 조회전용 topic)으로 흘려보내는게  몇줄 코딩 없이 쉽게 가능해집니다.
-
-```java
-final KStream<String, String> output =
-            source.transform(new OrderTransformerSupplier(storeName), storeName);
-
-output.to(viewTopic);
-```
-
-물론 별도의 Persistence Layer 를 관리해야하는 단점도 생기긴 합니다.
+Multi Topic, Multi Partition 인경우는 이 부분이 구현이 좀 어려워 질 것 같아 다른 브랜치를 따서 구현해보겠습니다. (같은 key를 쓰는 다른 topic의 aggregation) 
 
 ### Sample Request
 

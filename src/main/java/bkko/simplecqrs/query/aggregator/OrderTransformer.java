@@ -36,7 +36,7 @@ public class OrderTransformer implements Transformer<String, String, KeyValue<St
 
         log.info("key={} / newValue ={}", key, newValue);
 
-        value = mergeEvent(newValue, stored);
+        value = mergeEvents(newValue, stored);
 
         stateStore.put(key, value);
 
@@ -54,36 +54,32 @@ public class OrderTransformer implements Transformer<String, String, KeyValue<St
         return null;
     }
 
-    private String mergeEvent(String newValue, String stored) {
-        String value;
+    private String mergeEvents(String newValue, String stored) {
         if (stored != null) {
-
             Order o = converter.toOrder(stored);
             Order n = converter.toOrder(newValue);
 
-            if (n.getDetail() != null) {
-                o.setDetail(n.getDetail());
-            }
+            aggregateOrder(o, n);
 
-            if (n.getPayment() != null) {
-                o.setPayment(n.getPayment());
-            }
-            if (n.getMail() != null) {
-                o.setMail(n.getMail());
-            }
-
-            o.setType(n.getType());
-
-            o.addEvents(n.getType());
-
-            value = converter.toJsonString(o);
-
+            return converter.toJsonString(o);
         } else {
             Order n = converter.toOrder(newValue);
             n.addEvents(n.getType());
-            value = converter.toJsonString(n);
+            return converter.toJsonString(n);
         }
-        return value;
     }
 
+    private void aggregateOrder(Order oldOrder, Order newOrder) {
+        if (newOrder.getDetail() != null) {
+            oldOrder.setDetail(newOrder.getDetail());
+        }
+        if (newOrder.getPayment() != null) {
+            oldOrder.setPayment(newOrder.getPayment());
+        }
+        if (newOrder.getMail() != null) {
+            oldOrder.setMail(newOrder.getMail());
+        }
+        oldOrder.setType(newOrder.getType());
+        oldOrder.addEvents(newOrder.getType());
+    }
 }
